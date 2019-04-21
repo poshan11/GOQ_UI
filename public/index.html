@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="theme-color" content="#000000" />
+  <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+  <title>React App</title>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+  <div id="msg" style="color: coral; font-family: cursive; font-size: 28px; margin: 10px auto">
+  Search areas to drop the Markers or click on map directly!
+  </div>
+  <div id="floating-panel">
+    <input id="address" type="textbox" value="Long Beach, CA">
+    <input id="submit" class="buttonClass" type="button" value="Search">
+  </div>
+  <div id="wrapper">
+    <div id="map" style="height:600px;"></div>
+
+    <div id="input_box">
+      <span id="close_div">X</span>
+      <span style="color: white; font-weight: 400;"> Enter Clue and correct answer for this spot </span>
+      <br />
+      <input type="text" id="clue" placeholder="Enter Clue">
+      <br />
+
+      <input type="text" id="ans_to_clue" placeholder="Enter Answer to the clue">
+      <br/>
+      
+      <input type="checkbox" id="isMultiMedia" > <label style = "color: white"> Interactive content?</label>
+      <br/>
+      <input type="button" class="buttonClass" id="finalize" value="Done">
+     
+    </div>
+  </div>
+
+ <div id ="createGame">
+    <input type="text" id="game_name" placeholder="Give a Game name">
+    <input type="button" class="buttonClass" id="sendMarkers" value="Create Game">
+ </div>
+ 
+  <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  <script src="https://www.gstatic.com/firebasejs/5.10.0/firebase.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.9.3/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.9.3/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase-database.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyAStF4AUyYUDQLDfsbmZDPMkWFr0A086_A",
+      authDomain: "gameoftreasures-1555808035264.firebaseapp.com",
+      databaseURL: "https://gameoftreasures-1555808035264.firebaseio.com",
+      projectId: "gameoftreasures-1555808035264",
+      storageBucket: "gameoftreasures-1555808035264.appspot.com",
+      messagingSenderId: "1075181277092"
+    };
+    firebase.initializeApp(config);
+
+    var markers = [];
+    var markerdata = new Map();
+    var currentLat = ''
+    var currentLng = ''
+    var map;
+    var db = firebase.firestore();
+    let documentRef = db.collection("knowCsulb");
+    console.log(documentRef);
+    function initMap() {
+      // var myLatlng = { lat: 33.783123, lng: -118.113707 };
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 17,
+        center: { lat: 33.783123, lng: -118.113707 }
+      });
+
+      // var marker = new google.maps.Marker({
+      //   position: myLatlng,
+      //   map: map,
+      //   title: 'Click to zoom'
+      // });
+
+      var geocoder = new google.maps.Geocoder();
+      var markerCount = 0;
+      google.maps.event.addListener(map, 'click', function (event) {
+        console.log("latclicked: ", event.latLng.lat())
+        currentLat = event.latLng.lat();
+        console.log("longclicked: ", event.latLng.lng())
+        currentLng = event.latLng.lng();
+        addMarker(event.latLng);
+      });
+
+      function addMarker(location) {
+        var marker = new google.maps.Marker({
+          position: location,
+          map: map
+        });
+        markers.push(marker);
+        markerCount += 1 ;
+        showDiv();
+      }
+
+      function showDiv() {
+        document.getElementById("input_box").style.visibility = 'visible';
+      }
+     
+      document.getElementById('submit').addEventListener('click', function () {
+        geocodeAddress(geocoder, map);
+      });
+      var curMarker ;
+      function addtoData() {
+        curMarker = {
+          Title: "Marker" + markers.length,
+          isFinal: 0,
+          Lat: currentLat,
+          Lng: currentLng,
+          Clue : document.getElementById("clue").value,
+          Sol: document.getElementById("ans_to_clue").value,
+          isMultiMedia: document.getElementById('isMultiMedia').checked
+        }
+        var key = curMarker.Title;
+
+        markerdata.set(key, curMarker);
+        console.log("markerdata: ", markerdata);
+        hideDiv();
+      }
+      document.getElementById("close_div").addEventListener('click', function () {
+        hideDiv()
+      })
+
+      document.getElementById("finalize").addEventListener('click', function () {
+        addtoData();
+      })
+
+      document.getElementById("sendMarkers").addEventListener('click', function () {
+
+
+        var gameName = document.getElementById('game_name').value;
+        const dbObj = firebase.database().ref(gameName);
+
+        function logMapElem(value, key, map) {
+          console.log(`${key} = ${value.Question}`);
+          dbObj.child(`${key}`).set(value);
+        }
+
+        // find key from current marker
+        curMarker.isFinal=1;
+        markerdata.set(curMarker.Title ,curMarker );
+        console.log(markerdata);
+        markerdata.forEach(logMapElem);
+        dbObj.child("totalMarker").set(markerCount);
+      });
+
+      function hideDiv() {
+        document.getElementById("input_box").style.visibility = 'hidden';
+      }
+    }
+
+
+    function geocodeAddress(geocoder, resultsMap) {
+      var address = document.getElementById('address').value;
+      geocoder.geocode({ 'address': address }, function (results, status) {
+        if (status === 'OK') {
+          resultsMap.setCenter(results[0].geometry.location);
+          var marker = new google.maps.Marker({
+            map: resultsMap,
+            position: results[0].geometry.location
+          });
+        } else {
+          alert('Geocode was not successful for the following reason: ' + status);
+        }
+      });
+    }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdPCeQdozrsbK8zk0vid1nK0-UiFFE-3I&callback=initMap">
+
+
+
+  </script>
+
+  <!-- <script defer src="https://www.gstatic.com/firebasejs/5.10.0/firebase-app.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/5.10.0/firebase-auth.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/5.10.0/firebase-database.js"></script> -->
+</body>
+
+</html>
