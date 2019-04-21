@@ -23,18 +23,18 @@
   <title>React App</title>
 </head>
 
-<body>
+<body style="margin: 20px;background-color: antiquewhite;" >
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
   <div id="msg" style="color: coral; font-family: cursive; font-size: 28px; margin: 10px auto">
-  Search areas to drop the Markers or click on map directly!
+  Step 1: Search areas to drop the Markers or click on map directly
   </div>
   <div id="floating-panel">
     <input id="address" type="textbox" value="Long Beach, CA">
     <input id="submit" class="buttonClass" type="button" value="Search">
   </div>
   <div id="wrapper">
-    <div id="map" style="height:600px;"></div>
+    <div id="map" style="height:450px; width:80%;"></div>
 
     <div id="input_box">
       <span id="close_div">X</span>
@@ -52,7 +52,9 @@
      
     </div>
   </div>
-
+  <div style="color: coral; font-family: cursive; font-size: 28px; margin: 10px auto">
+    Step 2: Give your game a name and hit create!
+  </div>
  <div id ="createGame">
     <input type="text" id="game_name" placeholder="Give a Game name">
     <input type="button" class="buttonClass" id="sendMarkers" value="Create Game">
